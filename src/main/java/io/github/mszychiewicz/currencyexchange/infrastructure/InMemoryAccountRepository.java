@@ -2,18 +2,20 @@ package io.github.mszychiewicz.currencyexchange.infrastructure;
 
 import io.github.mszychiewicz.currencyexchange.domain.Account;
 import io.github.mszychiewicz.currencyexchange.domain.AccountRepository;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@RequiredArgsConstructor
 public class InMemoryAccountRepository implements AccountRepository {
     private final Map<UUID, Account> accounts;
+
+    public InMemoryAccountRepository() {
+        this.accounts = new ConcurrentHashMap<>();
+    }
 
     @Override
     public UUID save(Account account) {
