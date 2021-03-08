@@ -151,7 +151,7 @@ class AccountUnitTest {
     }
 
     @Test
-    void shouldValidateIfHasInsufficientFunds_pos() {
+    void shouldValidateAccountHasSufficientFunds_pos() {
         //given
         Account account = new Account(
                 "Jane",
@@ -167,7 +167,7 @@ class AccountUnitTest {
     }
 
     @Test
-    void shouldValidateIfHasInsufficientFunds_neg() {
+    void shouldValidateAccountHasSufficientFunds_neg() {
         //given
         BigDecimal openingBalance = BigDecimal.TEN;
         Account account = new Account(
