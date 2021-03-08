@@ -1,10 +1,14 @@
 package io.github.mszychiewicz.currencyexchange.api.response;
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Value
- public class OpenAccountResponse {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class OpenAccountResponse {
     UUID id;
 }
