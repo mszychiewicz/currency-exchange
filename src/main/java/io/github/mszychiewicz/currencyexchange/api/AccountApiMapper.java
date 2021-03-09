@@ -23,7 +23,7 @@ class AccountApiMapper {
     public OpenAccountCommand toCommand(OpenAccountRequest request) {
         return new OpenAccountCommand(
                 request.getFirstName(),
-                request.getSecondName(),
+                request.getLastName(),
                 request.getOpeningBalance()
         );
     }

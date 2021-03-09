@@ -11,7 +11,7 @@ public class OpenAccountRequest {
     @NotBlank
     String firstName;
     @NotBlank
-    String secondName;
+    String lastName;
     @Positive
     BigDecimal openingBalance;
 }
