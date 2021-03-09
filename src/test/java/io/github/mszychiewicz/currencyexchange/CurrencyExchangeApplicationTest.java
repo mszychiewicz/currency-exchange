@@ -3,18 +3,24 @@ package io.github.mszychiewicz.currencyexchange;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.github.mszychiewicz.currencyexchange.config.NbpMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,6 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureWireMock(port = 0)
+@TestPropertySource(properties = "clients.nbp.baseUrl=http://localhost:${wiremock.server.port}")
 class CurrencyExchangeApplicationTest {
 
     @Autowired
@@ -29,9 +37,6 @@ class CurrencyExchangeApplicationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @RegisterExtension
-    NbpMockServer nbpMockServer = new NbpMockServer();
 
     @Test
     void givenUserData_whenUserOpensAccount_thenAccountIsCorrect() throws Exception {
@@ -50,6 +55,7 @@ class CurrencyExchangeApplicationTest {
         assertEquals(accountId, accountDetails.get("id").textValue());
         assertEquals(firstName, accountDetails.get("firstName").textValue());
         assertEquals(lastName, accountDetails.get("lastName").textValue());
+
         //and account balance is correct
         BigDecimal plnAccountBalance = new BigDecimal(accountDetails.path("balances").get("PLN").toString());
         assertEquals(plnBalance, plnAccountBalance);
@@ -69,7 +75,7 @@ class CurrencyExchangeApplicationTest {
 
         //and there are exchange rates
         BigDecimal askExchangeRate = new BigDecimal("3.9112");
-        nbpMockServer.stubExchangeRateResponse(currencyCode, "3.8421", askExchangeRate.toString());
+        stubExchangeRateResponse(currencyCode, "3.8421", askExchangeRate.toString());
 
         //when they try to buy currency expect success
         buyCurrency(accountId, currencyCode, amountToBuy);
@@ -101,7 +107,7 @@ class CurrencyExchangeApplicationTest {
         //and there are exchange rates
         BigDecimal bidExchangeRate = new BigDecimal("3.8421");
         BigDecimal askExchangeRate = new BigDecimal("3.9112");
-        nbpMockServer.stubExchangeRateResponse(currencyCode, bidExchangeRate.toString(), askExchangeRate.toString());
+        stubExchangeRateResponse(currencyCode, bidExchangeRate.toString(), askExchangeRate.toString());
 
         //and has sufficient balance
         BigDecimal currencyBalance = BigDecimal.ONE;
@@ -168,5 +174,28 @@ class CurrencyExchangeApplicationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(sellCurrencyData)))
                 .andExpect(status().isOk());
+    }
+
+    public void stubExchangeRateResponse(String currencyCode, String bidRate, String askRate) {
+        String responseBody = "{\n" +
+                "  \"table\": \"C\",\n" +
+                "  \"currency\": \"dolar amerykański\",\n" +
+                "  \"code\": \"" + currencyCode + "\",\n" +
+                "  \"rates\": [\n" +
+                "    {\n" +
+                "      \"no\": \"046/C/NBP/2021\",\n" +
+                "      \"effectiveDate\": \"2021-03-09\",\n" +
+                "      \"bid\": " + bidRate + ",\n" +
+                "      \"ask\": " + askRate + "\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        stubFor(WireMock.get(urlEqualTo("/api/exchangerates/rates/c/" + currencyCode))
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(responseBody)
+                ));
     }
 }

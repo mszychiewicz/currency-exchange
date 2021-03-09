@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AccountUnitTest {
@@ -27,9 +28,9 @@ class AccountUnitTest {
         );
         //then
         Currency expectedCurrency = Currency.getInstance("PLN");
-        assert (account.getFirstName()).equals(firstName);
-        assert (account.getLastName()).equals(lastName);
-        assert (account.getBalances().get(expectedCurrency)).equals(openingBalance);
+        assertEquals(account.getFirstName(), firstName);
+        assertEquals(account.getLastName(), lastName);
+        assertEquals(account.getBalances().get(expectedCurrency), openingBalance);
     }
 
     @Test
@@ -38,7 +39,7 @@ class AccountUnitTest {
         String firstName = "";
         String lastName = "Doe";
         BigDecimal openingBalance = BigDecimal.TEN;
-        //when
+        //when then
         assertThrows(InvalidNameException.class, () -> new Account(
                 firstName,
                 lastName,
@@ -52,7 +53,7 @@ class AccountUnitTest {
         String firstName = "Jane";
         String lastName = "";
         BigDecimal openingBalance = BigDecimal.TEN;
-        //when
+        //when then
         assertThrows(InvalidNameException.class, () -> new Account(
                 firstName,
                 lastName,
@@ -86,9 +87,8 @@ class AccountUnitTest {
         BigDecimal amount = BigDecimal.ONE;
         //when
         account.depositFunds(currency, amount);
-
         //then
-        assert (account.getBalances().get(currency).equals(amount));
+        assertEquals(account.getBalances().get(currency), amount);
     }
 
     @Test
@@ -119,7 +119,7 @@ class AccountUnitTest {
         //when
         account.withdrawFunds(currency, amount);
         //then
-        assert (account.getBalances().get(currency).equals(openingBalance.subtract(amount)));
+        assertEquals(account.getBalances().get(currency), (openingBalance.subtract(amount)));
     }
 
     @Test

@@ -1,5 +1,0 @@
-clients:
-  nbp:
-    port: 8089
-    baseUrl: http://localhost:${clients.nbp.port}
-    exchangeRateUrl: /api/exchangerates/rates/c/
