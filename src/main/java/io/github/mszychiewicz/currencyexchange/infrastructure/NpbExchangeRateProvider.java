@@ -2,8 +2,8 @@ package io.github.mszychiewicz.currencyexchange.infrastructure;
 
 import io.github.mszychiewicz.currencyexchange.domain.ExchangeRateProvider;
 import io.github.mszychiewicz.currencyexchange.infrastructure.response.CurrencyExchangeRateResponse;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -18,7 +18,11 @@ import java.util.Optional;
 public class NpbExchangeRateProvider implements ExchangeRateProvider {
     private final RestTemplate restTemplate;
 
-    private static final String BASE_URL = "http://api.nbp.pl/api/exchangerates/rates/c/";
+    @Value("${clients.nbp.baseUrl}")
+    private String baseUrl;
+
+    @Value("${clients.nbp.exchangeRateUrl}")
+    private String exchangeRateUrl;
 
     public Optional<BigDecimal> findAskExchangeRate(Currency currency) {
         try {
@@ -41,7 +45,7 @@ public class NpbExchangeRateProvider implements ExchangeRateProvider {
     private CurrencyExchangeRateResponse fetchExchangeRate(Currency currency) {
         ResponseEntity<CurrencyExchangeRateResponse> response =
                 restTemplate.getForEntity(
-                        BASE_URL + currency.getCurrencyCode(),
+                        baseUrl + exchangeRateUrl + currency.getCurrencyCode(),
                         CurrencyExchangeRateResponse.class
                 );
 
