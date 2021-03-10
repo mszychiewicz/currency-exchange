@@ -135,7 +135,7 @@ class CurrencyExchangeApplicationTest {
         openAccountData.put("lastName", lastName);
         openAccountData.put("openingBalance", plnBalance.toString());
 
-        MvcResult openAccountResult = mvc.perform(post("/account")
+        MvcResult openAccountResult = mvc.perform(post("/accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(openAccountData)))
                 .andExpect(status().isOk())
@@ -146,7 +146,7 @@ class CurrencyExchangeApplicationTest {
     }
 
     private JsonNode getAccountDetails(String accountId) throws Exception {
-        MvcResult getAccountDetailsResult = mvc.perform(get("/account/" + accountId))
+        MvcResult getAccountDetailsResult = mvc.perform(get("/accounts/" + accountId))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -159,7 +159,7 @@ class CurrencyExchangeApplicationTest {
         buyCurrencyData.put("currencyCode", currencyCode);
         buyCurrencyData.put("amount", amount.toString());
 
-        mvc.perform(post("/account/" + accountId + "/buy-currency-command")
+        mvc.perform(post("/accounts/" + accountId + "/buy-currency-commands")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(buyCurrencyData)))
                 .andExpect(status().isOk());
@@ -170,7 +170,7 @@ class CurrencyExchangeApplicationTest {
         sellCurrencyData.put("currencyCode", currencyCode);
         sellCurrencyData.put("amount", amount.toString());
 
-        mvc.perform(post("/account/" + accountId + "/sell-currency-command")
+        mvc.perform(post("/accounts/" + accountId + "/sell-currency-commands")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(sellCurrencyData)))
                 .andExpect(status().isOk());

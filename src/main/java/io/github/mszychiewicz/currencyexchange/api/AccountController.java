@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @Controller
 @AllArgsConstructor
-@RequestMapping("/account")
+@RequestMapping("/accounts")
 public class AccountController {
     private final AccountService accountService;
     private final AccountApiMapper accountApiMapper;
@@ -40,14 +40,14 @@ public class AccountController {
         return accountApiMapper.toResponse(accountId);
     }
 
-    @PostMapping("/{id}/buy-currency-command")
+    @PostMapping("/{id}/buy-currency-commands")
     @ResponseStatus(HttpStatus.OK)
     public void buyCurrency(@PathVariable("id") UUID id,
                             @Valid @RequestBody BuyCurrencyRequest request) {
         accountService.buyCurrency(accountApiMapper.toCommand(id, request));
     }
 
-    @PostMapping("/{id}/sell-currency-command")
+    @PostMapping("/{id}/sell-currency-commands")
     @ResponseStatus(HttpStatus.OK)
     public void sellCurrency(@PathVariable("id") UUID id,
                              @Valid @RequestBody SellCurrencyRequest request) {
