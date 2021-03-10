@@ -28,7 +28,7 @@ class NbpExchangeRateProviderTest {
     private NpbExchangeRateProvider exchangeRateProvider;
 
     @Test
-    void shouldFetchAsk() {
+    void shouldReturnAsk_whenServerOk() {
         //given
         Currency USD = Currency.getInstance("USD");
         String askRate = "3.4567";
@@ -41,7 +41,18 @@ class NbpExchangeRateProviderTest {
     }
 
     @Test
-    void shouldFetchBid() {
+    void shouldReturnEmptyAskOptional_whenCurrencyNotFound() {
+        //given
+        Currency USD = Currency.getInstance("USD");
+        stubExchangeRateNotFoundResponse(USD.getCurrencyCode());
+        //when
+        Optional<BigDecimal> askOptional = exchangeRateProvider.findAskExchangeRate(USD);
+        //then
+        assertThat(askOptional).isEmpty();
+    }
+
+    @Test
+    void shouldReturnBid_whenServerOk() {
         //given
         Currency USD = Currency.getInstance("USD");
         String bidRate = "3.4567";
@@ -53,7 +64,18 @@ class NbpExchangeRateProviderTest {
         assertThat(bidOptional.get()).isEqualByComparingTo(bidRate);
     }
 
-    public void stubExchangeRateResponse(String currencyCode, String bidRate, String askRate) {
+    @Test
+    void shouldReturnEmptyBidOptional_whenCurrencyNotFound() {
+        //given
+        Currency USD = Currency.getInstance("USD");
+        stubExchangeRateNotFoundResponse(USD.getCurrencyCode());
+        //when
+        Optional<BigDecimal> bidOptional = exchangeRateProvider.findBidExchangeRate(USD);
+        //then
+        assertThat(bidOptional).isEmpty();
+    }
+
+    void stubExchangeRateResponse(String currencyCode, String bidRate, String askRate) {
         String responseBody = "{\n" +
                 "  \"table\": \"C\",\n" +
                 "  \"currency\": \"dolar amerykański\",\n" +
@@ -73,6 +95,13 @@ class NbpExchangeRateProviderTest {
                         .withStatus(HttpStatus.OK.value())
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody(responseBody)
+                ));
+    }
+
+    void stubExchangeRateNotFoundResponse(String currencyCode) {
+        stubFor(WireMock.get(urlEqualTo("/api/exchangerates/rates/c/" + currencyCode))
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.NOT_FOUND.value())
                 ));
     }
 }

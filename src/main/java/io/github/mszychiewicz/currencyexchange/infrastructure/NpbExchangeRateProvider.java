@@ -4,10 +4,12 @@ import io.github.mszychiewicz.currencyexchange.domain.ExchangeRateProvider;
 import io.github.mszychiewicz.currencyexchange.infrastructure.response.CurrencyExchangeRateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -30,6 +32,8 @@ public class NpbExchangeRateProvider implements ExchangeRateProvider {
             return Optional.of(ask);
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY);
         }
     }
 
@@ -39,6 +43,8 @@ public class NpbExchangeRateProvider implements ExchangeRateProvider {
             return Optional.of(bid);
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY);
         }
     }
 
@@ -48,7 +54,6 @@ public class NpbExchangeRateProvider implements ExchangeRateProvider {
                         baseUrl + exchangeRateUrl + currency.getCurrencyCode(),
                         CurrencyExchangeRateResponse.class
                 );
-
         return response.getBody();
     }
 }
