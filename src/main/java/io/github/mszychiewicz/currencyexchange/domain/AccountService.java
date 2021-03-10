@@ -25,7 +25,7 @@ public class AccountService {
     public UUID openAccount(OpenAccountCommand openAccountCommand) {
         Account newAccount = new Account(
                 openAccountCommand.getFirstName(),
-                openAccountCommand.getSecondName(),
+                openAccountCommand.getLastName(),
                 openAccountCommand.getOpeningBalance()
         );
         return accountRepository.save(newAccount);

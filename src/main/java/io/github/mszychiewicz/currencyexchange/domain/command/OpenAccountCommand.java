@@ -7,6 +7,6 @@ import java.math.BigDecimal;
 @Value
 public class OpenAccountCommand {
     String firstName;
-    String secondName;
+    String lastName;
     BigDecimal openingBalance;
 }

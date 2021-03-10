@@ -24,8 +24,8 @@ public class Account {
     public static final Currency PLN = Currency.getInstance("PLN");
 
     public Account(String firstName, String lastName, BigDecimal openingBalance) {
-        validateName(lastName);
         validateName(firstName);
+        validateName(lastName);
         validateAmount(openingBalance);
 
         this.id = UUID.randomUUID();
