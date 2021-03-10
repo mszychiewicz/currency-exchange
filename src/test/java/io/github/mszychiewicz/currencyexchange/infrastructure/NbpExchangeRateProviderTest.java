@@ -9,15 +9,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.Currency;
-import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @AutoConfigureWireMock(port = 0)
@@ -28,51 +29,55 @@ class NbpExchangeRateProviderTest {
     private NpbExchangeRateProvider exchangeRateProvider;
 
     @Test
-    void shouldReturnAsk_whenServerOk() {
+    void givenCurrencyAndOkResponse_whenGetAskExchangeRate_thenCorrectAskIsReturned() {
         //given
         Currency USD = Currency.getInstance("USD");
-        String askRate = "3.4567";
-        stubExchangeRateResponse(USD.getCurrencyCode(), "3.8340", askRate);
+        BigDecimal returnedAskExchangeRate = new BigDecimal("3.4567");
+        stubExchangeRateResponse(USD.getCurrencyCode(), "3.8340", returnedAskExchangeRate.toString());
         //when
-        Optional<BigDecimal> askOptional = exchangeRateProvider.findAskExchangeRate(USD);
+        BigDecimal askExchangeRate = exchangeRateProvider.getAskExchangeRate(USD);
         //then
-        assertThat(askOptional).isNotEmpty();
-        assertThat(askOptional.get()).isEqualByComparingTo(askRate);
+        assertEquals(returnedAskExchangeRate, askExchangeRate);
     }
 
     @Test
-    void shouldReturnEmptyAskOptional_whenCurrencyNotFound() {
+    void givenCurrencyAndNotFoundResponse_whenGetAskExchangeRate_thenThrowServiceUnavailableStatus() {
         //given
         Currency USD = Currency.getInstance("USD");
         stubExchangeRateNotFoundResponse(USD.getCurrencyCode());
         //when
-        Optional<BigDecimal> askOptional = exchangeRateProvider.findAskExchangeRate(USD);
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> exchangeRateProvider.getAskExchangeRate(USD)
+        );
         //then
-        assertThat(askOptional).isEmpty();
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatus());
     }
 
     @Test
-    void shouldReturnBid_whenServerOk() {
+    void givenCurrencyAndOkResponse_whenGetBidExchangeRate_thenCorrectAskIsReturned() {
         //given
         Currency USD = Currency.getInstance("USD");
-        String bidRate = "3.4567";
-        stubExchangeRateResponse(USD.getCurrencyCode(), bidRate, "3.9114");
+        BigDecimal returnedBidExchangeRate = new BigDecimal("3.4567");
+        stubExchangeRateResponse(USD.getCurrencyCode(), "3.8340", returnedBidExchangeRate.toString());
         //when
-        Optional<BigDecimal> bidOptional = exchangeRateProvider.findBidExchangeRate(USD);
+        BigDecimal askExchangeRate = exchangeRateProvider.getAskExchangeRate(USD);
         //then
-        assertThat(bidOptional).isNotEmpty();
-        assertThat(bidOptional.get()).isEqualByComparingTo(bidRate);
+        assertEquals(returnedBidExchangeRate, askExchangeRate);
     }
 
     @Test
-    void shouldReturnEmptyBidOptional_whenCurrencyNotFound() {
+    void givenCurrencyAndNotFoundResponse_whenGetBidExchangeRate_thenThrowServiceUnavailableStatus() {
         //given
         Currency USD = Currency.getInstance("USD");
         stubExchangeRateNotFoundResponse(USD.getCurrencyCode());
         //when
-        Optional<BigDecimal> bidOptional = exchangeRateProvider.findBidExchangeRate(USD);
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> exchangeRateProvider.getBidExchangeRate(USD)
+        );
         //then
-        assertThat(bidOptional).isEmpty();
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatus());
     }
 
     void stubExchangeRateResponse(String currencyCode, String bidRate, String askRate) {

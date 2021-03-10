@@ -129,7 +129,7 @@ class AccountServiceUnitTest {
         when(accountRepository.findById(existingAccount.getId())).thenReturn(Optional.of(existingAccount));
         BuyCurrencyCommand command = new BuyCurrencyCommand(existingAccount.getId(), USD, BigDecimal.ONE);
         BigDecimal askExchangeRate = new BigDecimal("3.9123");
-        when(exchangeRateProvider.findAskExchangeRate(command.getCurrency())).thenReturn(Optional.of(askExchangeRate));
+        when(exchangeRateProvider.getAskExchangeRate(USD)).thenReturn(askExchangeRate);
 
         when(accountRepository.save(arg.capture())).thenReturn(existingAccount.getId());
 
@@ -165,23 +165,11 @@ class AccountServiceUnitTest {
         Account existingAccount = new Account("Jane", "Doe", BigDecimal.TEN);
         when(accountRepository.findById(existingAccount.getId())).thenReturn(Optional.of(existingAccount));
         BigDecimal askExchangeRate = new BigDecimal("3.9123");
-        when(exchangeRateProvider.findAskExchangeRate(USD)).thenReturn(Optional.of(askExchangeRate));
+        when(exchangeRateProvider.getAskExchangeRate(USD)).thenReturn(askExchangeRate);
         BuyCurrencyCommand command = new BuyCurrencyCommand(existingAccount.getId(), USD, BigDecimal.TEN);
 
         //when then
         assertThrows(InsufficientFundsException.class, () -> accountService.buyCurrency(command));
-    }
-
-    @Test
-    void givenNoAskExchangeRate_whenBuyCurrency_thenThrowCurrencyNotSupportedException() {
-        //given
-        Account existingAccount = new Account("Jane", "Doe", BigDecimal.TEN);
-        when(accountRepository.findById(existingAccount.getId())).thenReturn(Optional.of(existingAccount));
-        BuyCurrencyCommand command = new BuyCurrencyCommand(existingAccount.getId(), USD, BigDecimal.ONE);
-        when(exchangeRateProvider.findAskExchangeRate(command.getCurrency())).thenReturn(Optional.empty());
-
-        //when then
-        assertThrows(CurrencyNotSupportedException.class, () -> accountService.buyCurrency(command));
     }
 
     @Test
@@ -194,7 +182,7 @@ class AccountServiceUnitTest {
         SellCurrencyCommand command = new SellCurrencyCommand(existingAccount.getId(), USD, BigDecimal.ONE);
         existingAccount.depositFunds(command.getCurrency(), existingCurrencyBalance);
         BigDecimal bidExchangeRate = new BigDecimal("3.9123");
-        when(exchangeRateProvider.findBidExchangeRate(command.getCurrency())).thenReturn(Optional.of(bidExchangeRate));
+        when(exchangeRateProvider.getBidExchangeRate(command.getCurrency())).thenReturn(bidExchangeRate);
 
         when(accountRepository.save(arg.capture())).thenReturn(existingAccount.getId());
 
@@ -233,18 +221,5 @@ class AccountServiceUnitTest {
 
         //when then
         assertThrows(InsufficientFundsException.class, () -> accountService.sellCurrency(command));
-    }
-
-    @Test
-    void givenNoBidExchangeRate_whenSellCurrency_thenThrowCurrencyNotSupportedException() {
-        //given
-        Account existingAccount = new Account("Jane", "Doe", BigDecimal.TEN);
-        SellCurrencyCommand command = new SellCurrencyCommand(existingAccount.getId(), USD, BigDecimal.ONE);
-        existingAccount.depositFunds(command.getCurrency(), BigDecimal.TEN);
-        when(accountRepository.findById(existingAccount.getId())).thenReturn(Optional.of(existingAccount));
-        when(exchangeRateProvider.findAskExchangeRate(command.getCurrency())).thenReturn(Optional.empty());
-
-        //when then
-        assertThrows(CurrencyNotSupportedException.class, () -> accountService.sellCurrency(command));
     }
 }

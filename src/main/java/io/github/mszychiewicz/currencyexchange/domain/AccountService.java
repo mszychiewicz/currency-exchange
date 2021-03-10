@@ -1,11 +1,9 @@
 package io.github.mszychiewicz.currencyexchange.domain;
 
 import io.github.mszychiewicz.currencyexchange.domain.command.BuyCurrencyCommand;
-import io.github.mszychiewicz.currencyexchange.domain.command.CurrencyCommand;
 import io.github.mszychiewicz.currencyexchange.domain.command.OpenAccountCommand;
 import io.github.mszychiewicz.currencyexchange.domain.command.SellCurrencyCommand;
 import io.github.mszychiewicz.currencyexchange.domain.exception.AccountNotFoundException;
-import io.github.mszychiewicz.currencyexchange.domain.exception.CurrencyNotSupportedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static io.github.mszychiewicz.currencyexchange.domain.Account.PLN;
-import static io.github.mszychiewicz.currencyexchange.domain.SupportedCurrencies.isNotSupported;
+import static io.github.mszychiewicz.currencyexchange.domain.SupportedCurrencies.validateCurrencySupport;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +19,6 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final ExchangeRateProvider exchangeRateProvider;
 
-    public static final String CURRENCY_NOT_SUPPORTED_MESSAGE = "Currency not supported.";
     public static final String ACCOUNT_NOT_FOUND_MESSAGE = "Account not found.";
 
     public UUID openAccount(OpenAccountCommand openAccountCommand) {
@@ -39,11 +36,11 @@ public class AccountService {
     }
 
     public void buyCurrency(BuyCurrencyCommand buyCurrencyCommand) {
-        validateCurrencySupport(buyCurrencyCommand);
+        validateCurrencySupport(buyCurrencyCommand.getCurrency());
 
         Account account = getById(buyCurrencyCommand.getId());
-        BigDecimal exchangeRate = exchangeRateProvider.findAskExchangeRate(buyCurrencyCommand.getCurrency())
-                .orElseThrow(() -> new CurrencyNotSupportedException(CURRENCY_NOT_SUPPORTED_MESSAGE));
+
+        BigDecimal exchangeRate = exchangeRateProvider.getAskExchangeRate(buyCurrencyCommand.getCurrency());
         BigDecimal costAmount = buyCurrencyCommand.getAmount().multiply(exchangeRate);
 
         account.withdrawFunds(PLN, costAmount);
@@ -52,22 +49,16 @@ public class AccountService {
     }
 
     public void sellCurrency(SellCurrencyCommand sellCurrencyCommand) {
-        validateCurrencySupport(sellCurrencyCommand);
+        validateCurrencySupport(sellCurrencyCommand.getCurrency());
 
         Account account = getById(sellCurrencyCommand.getId());
         account.validateHasSufficientFunds(sellCurrencyCommand.getCurrency(), sellCurrencyCommand.getAmount());
-        BigDecimal exchangeRate = exchangeRateProvider.findBidExchangeRate(sellCurrencyCommand.getCurrency())
-                .orElseThrow(() -> new CurrencyNotSupportedException(CURRENCY_NOT_SUPPORTED_MESSAGE));
+
+        BigDecimal exchangeRate = exchangeRateProvider.getBidExchangeRate(sellCurrencyCommand.getCurrency());
         BigDecimal exchangedAmount = sellCurrencyCommand.getAmount().multiply(exchangeRate);
 
         account.withdrawFunds(sellCurrencyCommand.getCurrency(), sellCurrencyCommand.getAmount());
         account.depositFunds(PLN, exchangedAmount);
         accountRepository.save(account);
-    }
-
-    private void validateCurrencySupport(CurrencyCommand currencyCommand) {
-        if (isNotSupported(currencyCommand.getCurrency())) {
-            throw new CurrencyNotSupportedException(CURRENCY_NOT_SUPPORTED_MESSAGE);
-        }
     }
 }

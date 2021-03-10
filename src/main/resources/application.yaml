@@ -1,4 +1,4 @@
 clients:
   nbp:
     baseUrl: http://api.nbp.pl
-    exchangeRateUrl: /api/exchangerates/rates/c/
+    exchangeRatesPath: /api/exchangerates/rates/c/

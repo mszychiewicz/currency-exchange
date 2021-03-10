@@ -7,13 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.Currency;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,35 +21,29 @@ public class NpbExchangeRateProvider implements ExchangeRateProvider {
     @Value("${clients.nbp.baseUrl}")
     private String baseUrl;
 
-    @Value("${clients.nbp.exchangeRateUrl}")
-    private String exchangeRateUrl;
+    @Value("${clients.nbp.exchangeRatesPath}")
+    private String exchangeRatesUrl;
 
-    public Optional<BigDecimal> findAskExchangeRate(Currency currency) {
+    public BigDecimal getAskExchangeRate(Currency currency) {
         try {
-            BigDecimal ask = fetchExchangeRate(currency).getRates().get(0).getAsk();
-            return Optional.of(ask);
-        } catch (HttpClientErrorException.NotFound e) {
-            return Optional.empty();
+            return fetchExchangeRates(currency).getRates().get(0).getAsk();
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 
-    public Optional<BigDecimal> findBidExchangeRate(Currency currency) {
+    public BigDecimal getBidExchangeRate(Currency currency) {
         try {
-            BigDecimal bid = fetchExchangeRate(currency).getRates().get(0).getBid();
-            return Optional.of(bid);
-        } catch (HttpClientErrorException.NotFound e) {
-            return Optional.empty();
+            return fetchExchangeRates(currency).getRates().get(0).getBid();
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 
-    private CurrencyExchangeRateResponse fetchExchangeRate(Currency currency) {
+    private CurrencyExchangeRateResponse fetchExchangeRates(Currency currency) {
         ResponseEntity<CurrencyExchangeRateResponse> response =
                 restTemplate.getForEntity(
-                        baseUrl + exchangeRateUrl + currency.getCurrencyCode(),
+                        baseUrl + exchangeRatesUrl + currency.getCurrencyCode(),
                         CurrencyExchangeRateResponse.class
                 );
         return response.getBody();
