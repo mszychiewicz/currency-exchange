@@ -62,7 +62,7 @@ class CurrencyExchangeApplicationTest {
     }
 
     @Test
-    void givenUserAccountWithSufficientBalance_whenUserBuysCurrency_thenExchangeIsCorrect() throws Exception {
+    void givenUserAccountWithSufficientBalance_whenUserBuysUsd_thenExchangeIsCorrect() throws Exception {
         //given user has open account with sufficient balance
         String firstName = "Jane";
         String lastName = "Doe";
@@ -93,7 +93,7 @@ class CurrencyExchangeApplicationTest {
     }
 
     @Test
-    void givenUserAccountWithSufficientBalance_whenUserSellsCurrency_thenExchangeIsCorrect() throws Exception {
+    void givenUserAccountWithSufficientBalance_whenUserSellsUsd_thenExchangeIsCorrect() throws Exception {
         //given user has open account
         String firstName = "Jane";
         String lastName = "Doe";

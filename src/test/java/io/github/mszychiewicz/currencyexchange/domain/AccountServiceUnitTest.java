@@ -122,10 +122,10 @@ class AccountServiceUnitTest {
     }
 
     @Test
-    void givenCommandAndExchangeRateAndAccountWithSufficientFunds_whenBuyCurrency_thenSaveCorrectBalance() {
+    void givenCommandAndExchangeRateAndAccountWithSufficientFunds_whenBuyUsd_thenSaveCorrectBalance() {
         //given
-        BigDecimal existingPlnBalance = BigDecimal.TEN;
-        Account existingAccount = new Account("Jane", "Doe", existingPlnBalance);
+        Account existingAccount = new Account("Jane", "Doe", BigDecimal.TEN);
+        BigDecimal existingPlnBalance = existingAccount.getBalances().get(PLN);
         when(accountRepository.findById(existingAccount.getId())).thenReturn(Optional.of(existingAccount));
         BuyCurrencyCommand command = new BuyCurrencyCommand(existingAccount.getId(), USD, BigDecimal.ONE);
         BigDecimal askExchangeRate = new BigDecimal("3.9123");
@@ -147,6 +147,16 @@ class AccountServiceUnitTest {
                 savedAccount.getBalances().get(command.getCurrency()),
                 command.getAmount()
         );
+    }
+
+    @Test
+    void givenNotSupportedCurrencyCommand_whenBuyCurrency_thenThrowCurrencyNotSupportedException() {
+        //given
+        Currency notSupportedCurrency = Currency.getInstance("JPY");
+        BuyCurrencyCommand command = new BuyCurrencyCommand(UUID.randomUUID(), notSupportedCurrency, BigDecimal.ONE);
+
+        //when then
+        assertThrows(CurrencyNotSupportedException.class, () -> accountService.buyCurrency(command));
     }
 
     @Test
@@ -202,6 +212,16 @@ class AccountServiceUnitTest {
                 savedAccount.getBalances().get(command.getCurrency()),
                 existingCurrencyBalance.subtract(command.getAmount())
         );
+    }
+
+    @Test
+    void givenNotSupportedCurrencyCommand_whenSellCurrency_thenThrowCurrencyNotSupportedException() {
+        //given
+        Currency notSupportedCurrency = Currency.getInstance("JPY");
+        SellCurrencyCommand command = new SellCurrencyCommand(UUID.randomUUID(), notSupportedCurrency, BigDecimal.ONE);
+
+        //when then
+        assertThrows(CurrencyNotSupportedException.class, () -> accountService.sellCurrency(command));
     }
 
     @Test

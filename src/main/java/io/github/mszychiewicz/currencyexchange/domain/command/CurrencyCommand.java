@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
-class CurrencyCommand {
+public class CurrencyCommand {
     private final UUID id;
     private final Currency currency;
     private final BigDecimal amount;

@@ -1,6 +1,7 @@
 package io.github.mszychiewicz.currencyexchange.domain;
 
 import io.github.mszychiewicz.currencyexchange.domain.command.BuyCurrencyCommand;
+import io.github.mszychiewicz.currencyexchange.domain.command.CurrencyCommand;
 import io.github.mszychiewicz.currencyexchange.domain.command.OpenAccountCommand;
 import io.github.mszychiewicz.currencyexchange.domain.command.SellCurrencyCommand;
 import io.github.mszychiewicz.currencyexchange.domain.exception.AccountNotFoundException;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static io.github.mszychiewicz.currencyexchange.domain.Account.PLN;
+import static io.github.mszychiewicz.currencyexchange.domain.SupportedCurrencies.isNotSupported;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,8 @@ public class AccountService {
     }
 
     public void buyCurrency(BuyCurrencyCommand buyCurrencyCommand) {
+        validateCurrencySupport(buyCurrencyCommand);
+
         Account account = getById(buyCurrencyCommand.getId());
         BigDecimal exchangeRate = exchangeRateProvider.findAskExchangeRate(buyCurrencyCommand.getCurrency())
                 .orElseThrow(() -> new CurrencyNotSupportedException(CURRENCY_NOT_SUPPORTED_MESSAGE));
@@ -48,6 +52,8 @@ public class AccountService {
     }
 
     public void sellCurrency(SellCurrencyCommand sellCurrencyCommand) {
+        validateCurrencySupport(sellCurrencyCommand);
+
         Account account = getById(sellCurrencyCommand.getId());
         account.validateHasSufficientFunds(sellCurrencyCommand.getCurrency(), sellCurrencyCommand.getAmount());
         BigDecimal exchangeRate = exchangeRateProvider.findBidExchangeRate(sellCurrencyCommand.getCurrency())
@@ -57,5 +63,11 @@ public class AccountService {
         account.withdrawFunds(sellCurrencyCommand.getCurrency(), sellCurrencyCommand.getAmount());
         account.depositFunds(PLN, exchangedAmount);
         accountRepository.save(account);
+    }
+
+    private void validateCurrencySupport(CurrencyCommand currencyCommand) {
+        if (isNotSupported(currencyCommand.getCurrency())) {
+            throw new CurrencyNotSupportedException(CURRENCY_NOT_SUPPORTED_MESSAGE);
+        }
     }
 }
